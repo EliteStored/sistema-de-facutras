@@ -17,13 +17,13 @@ function App() {
     files.forEach((file) => {
       formData.append('files', file)
     })
-    const res = await fetch('http://localhost:8000/upload/', {
+    const res = await fetch('https://sistema-de-facturas-backend.onrender.com/upload/', {
       method: 'POST',
       body: formData,
     })
     const data = await res.json()
     const excelFile = data.excel_file.split('\\').pop()
-    setExcelUrl(`http://localhost:8000/download/${excelFile}`)
+    setExcelUrl(`https://sistema-de-facturas-backend.onrender.com/download/${excelFile}`)
     setLoading(false)
   }
 
