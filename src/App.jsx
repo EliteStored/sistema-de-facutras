@@ -1,29 +1,44 @@
 import React, { useState } from 'react'
-import './index.css'
+import './App.css'
+
+const BACKEND_URL = 'https://sistema-de-facturas-backend.onrender.com'
 
 function App() {
   const [files, setFiles] = useState([])
   const [excelUrl, setExcelUrl] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files))
+    setError('')
+    setExcelUrl('')
   }
 
   const handleUpload = async () => {
     if (!files.length) return
     setLoading(true)
+    setError('')
     const formData = new FormData()
     files.forEach((file) => {
       formData.append('files', file)
     })
-    const res = await fetch('https://sistema-de-facturas-backend.onrender.com/upload/', {
-      method: 'POST',
-      body: formData,
-    })
-    const data = await res.json()
-    const excelFile = data.excel_file.split('\\').pop()
-    setExcelUrl(`https://sistema-de-facturas-backend.onrender.com/download/${excelFile}`)
+    try {
+      const res = await fetch(`${BACKEND_URL}/upload/`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.detail || 'Error en el backend')
+      }
+      const data = await res.json()
+      const excelFile = data.excel_file.split(/[\\/]/).pop()
+      setExcelUrl(`${BACKEND_URL}/download/${excelFile}`)
+    } catch (err) {
+      setError(err.message || 'Error al procesar las facturas')
+      setExcelUrl('')
+    }
     setLoading(false)
   }
 
@@ -43,6 +58,11 @@ function App() {
       >
         {loading ? 'Procesando...' : 'Subir y convertir'}
       </button>
+      {error && (
+        <div style={{ color: 'red', marginTop: 16 }}>
+          {error}
+        </div>
+      )}
       {excelUrl && (
         <div style={{ marginTop: 24 }}>
           <a
